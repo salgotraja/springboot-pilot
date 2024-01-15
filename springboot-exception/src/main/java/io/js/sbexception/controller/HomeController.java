@@ -18,7 +18,7 @@ public class HomeController {
         } else if("500".equals(code)) {
             throw new RuntimeException("Something terrible happened!!! Run.......");
         }
-        model.addAttribute("greeting", "Hello Siva");
+        model.addAttribute("greeting", "Hello Jagdish");
         return "demo";
     }
 }
