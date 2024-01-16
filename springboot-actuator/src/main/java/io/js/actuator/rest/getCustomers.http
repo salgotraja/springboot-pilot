@@ -1,0 +1,6 @@
+### GET HTTP Request to get all customers
+GET http://localhost:8080/api/customers
+
+### GET Customer by ID
+GET http://localhost:8080/api/customers/2
+Accept: application/json
