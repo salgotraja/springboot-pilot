@@ -6,7 +6,7 @@ plugins {
 
 group = 'io.js'
 version = '0.0.1-SNAPSHOT'
-	
+
 java {
 	sourceCompatibility = '21'
 }
@@ -19,10 +19,6 @@ configurations {
 
 repositories {
 	mavenCentral()
-}
-
-tasks.withType(JavaCompile).configureEach {
-	options.encoding = 'UTF-8'
 }
 
 ext {
