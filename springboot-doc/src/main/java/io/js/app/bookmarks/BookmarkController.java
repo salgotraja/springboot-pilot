@@ -1,7 +1,7 @@
 package io.js.app.bookmarks;
 
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -42,8 +42,8 @@ public class BookmarkController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @ApiResponses(
             value = {
-                    @ApiResponse(message = "Successfully created new bookmark", code = 201),
-                    @ApiResponse(message = "Forbidden", code = 403)
+                    @ApiResponse(description = "Successfully created new bookmark", responseCode = "201"),
+                    @ApiResponse(description = "Forbidden", responseCode = "403"),
             }
     )
     public Bookmark createBookmark(@RequestBody @Valid Bookmark bookmark) {
