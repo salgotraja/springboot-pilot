@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,6 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "jwtBearerAuth")
 @Tag(name = "Bookmarks")
+@Slf4j
 public class BookmarkController {
     private final BookmarkService bookmarkService;
 
@@ -28,7 +30,9 @@ public class BookmarkController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Bookmark> getBookmarkById(@PathVariable Long id) {
+        log.info("id: {}", id);
         Bookmark bookmark = bookmarkService.getBookmarkById(id);
+        log.info("bookmark: {}", bookmark);
         if (bookmark != null) {
             return ResponseEntity.ok(bookmark);
         } else {

@@ -12,9 +12,4 @@ public class AppConfig {
     PasswordEncoder passwordEncode() {
         return new BCryptPasswordEncoder();
     }
-
-    /*@Bean
-    public SecurityProblemSupport securityProblemSupport(HandlerExceptionResolver handlerExceptionResolver) {
-        return new SecurityProblemSupport(handlerExceptionResolver);
-    }*/
 }

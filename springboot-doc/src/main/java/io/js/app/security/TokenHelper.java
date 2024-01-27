@@ -24,8 +24,6 @@ public class TokenHelper {
         return claims.getSubject();
     }
 
-
-
     public String generateToken(String username) {
         byte[] decodedKey = Base64.getDecoder().decode(applicationProperties.getJwt().getSecret());
         SecretKeySpec secretKeySpec = new SecretKeySpec(decodedKey, 0, decodedKey.length, "HmacSHA512");
@@ -56,8 +54,16 @@ public class TokenHelper {
 
     public Boolean validateToken(String token, UserDetails userDetails) {
         final String username = getUsernameFromToken(token);
-        return username != null && username.equals(userDetails.getUsername());
+        log.info("username: {}", username);
+
+        final Claims claims = this.getAllClaimsFromToken(token);
+        final Date expirationDate = claims.getExpiration();
+
+        boolean isTokenExpired = expirationDate.before(new Date());
+
+        return username != null && username.equals(userDetails.getUsername()) && !isTokenExpired;
     }
+
 
     public String getToken(HttpServletRequest request) {
         String authHeader = request.getHeader(applicationProperties.getJwt().getHeader());

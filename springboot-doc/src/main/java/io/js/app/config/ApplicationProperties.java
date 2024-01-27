@@ -15,6 +15,6 @@ public class ApplicationProperties {
         private String issuer = "salgotraja";
         private String header = "Authorization";
         private Long expiresIn = DEFAULT_JWT_TOKEN_EXPIRES;
-        private String secret = "";
+        private String secret;
     }
 }
