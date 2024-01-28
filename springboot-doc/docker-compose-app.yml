@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  bookmarks-api:
+    build:
+      dockerfile: Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_DATASOURCE_URL: jdbc:postgresql://bookmarks-db:5432/bookmarks
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    ports:
+      - "8080:8080"
+    restart: always
+    depends_on:
+      - bookmarks-db
