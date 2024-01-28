@@ -1,9 +1,15 @@
 package io.js.app.users;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Setter
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class AuthenticationRequest {
     @NotBlank(message = "UserName cannot be blank")
     private String username;

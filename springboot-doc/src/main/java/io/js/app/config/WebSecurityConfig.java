@@ -21,7 +21,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
-import org.zalando.problem.spring.web.advice.security.SecurityProblemSupport;
 
 @Configuration
 @EnableWebSecurity
@@ -30,7 +29,6 @@ import org.zalando.problem.spring.web.advice.security.SecurityProblemSupport;
 @Slf4j
 public class WebSecurityConfig {
 
-    private final SecurityProblemSupport problemSupport;
     private final UserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
     private final TokenAuthenticationFilter tokenAuthenticationFilter;
@@ -50,9 +48,9 @@ public class WebSecurityConfig {
                         .xssProtection(xss -> xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint(problemSupport)
-                        .accessDeniedHandler(problemSupport))
+               // .exceptionHandling(exceptions -> exceptions
+                //        .authenticationEntryPoint(problemSupport)
+                 //       .accessDeniedHandler(problemSupport))
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/actuator/**", "/h2-console/**", "/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/webjars/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/bookmarks/**").hasRole("ADMIN")
