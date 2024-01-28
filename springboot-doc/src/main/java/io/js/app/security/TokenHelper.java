@@ -58,8 +58,10 @@ public class TokenHelper {
 
         final Claims claims = this.getAllClaimsFromToken(token);
         final Date expirationDate = claims.getExpiration();
+        log.info("expirationDate: {}", expirationDate);
 
         boolean isTokenExpired = expirationDate.before(new Date());
+        log.info("isTokenExpired: {}", isTokenExpired);
 
         return username != null && username.equals(userDetails.getUsername()) && !isTokenExpired;
     }

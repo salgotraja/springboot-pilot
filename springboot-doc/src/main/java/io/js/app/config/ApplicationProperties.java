@@ -10,7 +10,7 @@ public class ApplicationProperties {
 
     @Data
     public static class JwtConfig {
-        private static final Long DEFAULT_JWT_TOKEN_EXPIRES = 604_800L;
+        private static final Long DEFAULT_JWT_TOKEN_EXPIRES = 600L;
 
         private String issuer = "salgotraja";
         private String header = "Authorization";
