@@ -10,8 +10,10 @@ import io.js.app.security.refresh.RefreshTokenService;
 import io.js.app.users.AuthenticationRequest;
 import io.js.app.users.AuthenticationResponse;
 import io.js.app.users.User;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,6 +21,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,11 +43,10 @@ public class AuthenticationController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> createAuthenticationToken(
-            @RequestBody AuthenticationRequest credentials) {
+            @Valid @RequestBody AuthenticationRequest credentials, BindingResult bindingResult) throws NoSuchMethodException, MethodArgumentNotValidException {
 
-        if (credentials.getUsername() == null || credentials.getUsername().isEmpty()
-                || credentials.getPassword() == null || credentials.getPassword().isEmpty()) {
-            throw new BadCredentialsException("Username and password must be provided");
+        if (bindingResult.hasErrors()) {
+            throw new MethodArgumentNotValidException(new MethodParameter(this.getClass().getMethod("createAuthenticationToken", AuthenticationRequest.class, BindingResult.class), 0), bindingResult);
         }
 
         try {
@@ -79,16 +82,20 @@ public class AuthenticationController {
     public ResponseEntity<AuthenticationResponse> refreshToken(@RequestBody RefreshTokenRequestDto refreshTokenRequestDTO) {
         Optional<RefreshToken> refreshTokenOpt = refreshTokenService.findByToken(refreshTokenRequestDTO.getToken());
 
-        RefreshToken refreshToken = refreshTokenOpt
-                .map(refreshTokenService::verifyExpiration)
-                .orElseThrow(() -> new TokenNotExistException("Refresh Token is not in DB"));
+        if (refreshTokenOpt.isEmpty() || refreshTokenOpt.get().getUser() == null) {
+            throw new TokenNotExistException("Associated user not found or token is invalid");
+        }
 
+        RefreshToken refreshToken = refreshTokenService.verifyExpiration(refreshTokenOpt.get());
         User user = refreshToken.getUser();
+
         String accessToken = tokenHelper.generateToken(user.getEmail());
         AuthenticationResponse authResponse = getAuthenticationResponse(accessToken, refreshTokenRequestDTO.getToken());
 
         return ResponseEntity.ok(authResponse);
     }
+
+
 
 
     private AuthenticationResponse getAuthenticationResponse(String accessToken, String refreshToken) {

@@ -1,11 +1,8 @@
 package io.js.app.users.api;
 
 import com.jayway.jsonpath.JsonPath;
-import io.js.app.config.ApplicationProperties;
 import io.js.app.infra.TestContainerConfiguration;
-import io.js.app.security.TokenHelper;
 import io.js.app.security.refresh.RefreshTokenRepository;
-import io.js.app.security.refresh.RefreshTokenService;
 import io.js.app.users.RoleEnum;
 import io.js.app.users.User;
 import io.js.app.users.UserRepository;
@@ -16,14 +13,15 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -36,18 +34,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class AuthenticationControllerITest {
 
     @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private TokenHelper tokenHelper;
-
-    @Autowired
-    private RefreshTokenService refreshTokenService;
-
-    @Autowired
-    private  ApplicationProperties applicationProperties;
-
-    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -58,11 +44,11 @@ public class AuthenticationControllerITest {
 
     @BeforeEach
     void setUp(){
-        userRepository.deleteAll();
         refreshTokenRepository.deleteAll();
+        userRepository.deleteAll();
         List<User> users = new ArrayList<>();
-        users.add(new User(null, "User1", "user1@gmail.com", "$2a$10$6eIiLEgHeQQ3OSPXZ1kaleC.mq3F0N./WI/PbVBRFFe0I8aU7QE9C", RoleEnum.ROLE_ADMIN));
-        users.add(new User(null, "User2", "user2@gmail.com", "$2a$10$6eIiLEgHeQQ3OSPXZ1kaleC.mq3F0N./WI/PbVBRFFe0I8aU7QE9C", RoleEnum.ROLE_USER));
+        users.add(new User(null, "User1", "user1@gmail.com", "$2a$10$i0R8wY4iRM1JeFRUgFRtKObmxi7pJW6J9fZlXGyPR9C4rLjjxyxlu", RoleEnum.ROLE_ADMIN));
+        users.add(new User(null, "User2", "user2@gmail.com", "$2a$10$i0R8wY4iRM1JeFRUgFRtKObmxi7pJW6J9fZlXGyPR9C4rLjjxyxlu", RoleEnum.ROLE_USER));
 
         userRepository.saveAll(users);
 
@@ -74,9 +60,8 @@ public class AuthenticationControllerITest {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                    {"username":"user1@gmail.com","password":"secret"}
+                                    {"username":"user1@gmail.com","password":"password"}
                                 """))
-                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.access_token",notNullValue()))
                 .andExpect(jsonPath("$.token", notNullValue()))
@@ -88,7 +73,6 @@ public class AuthenticationControllerITest {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"wronguser@gmail.com\",\"password\":\"wrongpassword\"}"))
-                .andDo(print())
                 .andExpect(status().isUnauthorized());
     }
 
@@ -96,8 +80,7 @@ public class AuthenticationControllerITest {
     void shouldRejectRequestWithMissingUsername() throws Exception {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"password\":\"secret\"}"))
-                .andDo(print())
+                        .content("{\"password\":\"password\"}"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -106,7 +89,7 @@ public class AuthenticationControllerITest {
         // First, authenticate to get the refresh token
         MvcResult result = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"username\":\"user1@gmail.com\",\"password\":\"secret\"}"))
+                        .content("{\"username\":\"user1@gmail.com\",\"password\":\"password\"}"))
                 .andReturn();
 
         String refreshToken = JsonPath.read(result.getResponse().getContentAsString(), "$.token");
@@ -115,8 +98,35 @@ public class AuthenticationControllerITest {
         mockMvc.perform(post("/api/auth/refreshToken")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"token\":\"" + refreshToken + "\"}"))
-                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.access_token", notNullValue()));
     }
+
+    @Test
+    void shouldHandleInvalidRefreshToken() throws Exception {
+        String invalidToken = "invalidOrExpiredToken";
+
+        mockMvc.perform(post("/api/auth/refreshToken")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"token\":\"" + invalidToken + "\"}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.title", is("Associated user not found or token is invalid")));
+    }
+
+    @Test
+    void shouldHandleLongUsernameAndPassword() throws Exception {
+        String longUsername = String.join("", Collections.nCopies(31, "a"));
+        String longPassword = String.join("", Collections.nCopies(51, "b"));
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"" + longUsername + "\",\"password\":\"" + longPassword + "\"}"))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[*]", hasItem("Username must be between 5 and 30 characters")))
+                .andExpect(jsonPath("$[*]", hasItem("Password must be between 8 and 50 characters")));
+
+    }
+
 }

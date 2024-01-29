@@ -1,6 +1,7 @@
 package io.js.app.users.api;
 
 import io.js.app.config.ApplicationProperties;
+import io.js.app.exception.TokenNotExistException;
 import io.js.app.security.TokenHelper;
 import io.js.app.security.refresh.RefreshToken;
 import io.js.app.security.refresh.RefreshTokenService;
@@ -29,6 +30,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.Matchers.hasItem;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
@@ -118,7 +120,7 @@ class AuthenticationControllerTest {
                         .content("{\"token\":\"" + token + "\"}"))
                 .andDo(print())
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.title", equalTo("Token not found")));
+                .andExpect(jsonPath("$.title", equalTo("Associated user not found or token is invalid")));
 
     }
 
@@ -267,4 +269,74 @@ class AuthenticationControllerTest {
         assertThat(result).isEqualTo(refreshToken);
     }
 
+    @WithMockUser
+    @Test
+    public void refreshToken_WhenTokenIsInvalidOrExpired_ShouldReturnAppropriateError() throws Exception {
+        String invalidToken = "expiredOrInvalidToken";
+        given(refreshTokenService.findByToken(invalidToken))
+                .willThrow(new TokenNotExistException("Refresh Token is not in DB or has expired"));
+
+        mockMvc.perform(post("/api/auth/refreshToken")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"token\":\"" + invalidToken + "\"}"))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.title", equalTo("Associated user not found or token is invalid")));
+    }
+
+    @WithMockUser
+    @Test
+    public void authenticate_WhenUsernameOrPasswordTooLong_ShouldReturnValidationErrors() throws Exception {
+        String longUsername = "a".repeat(31);
+        String longPassword = "a".repeat(51);
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(String.format("{\"username\":\"%s\",\"password\":\"%s\"}", longUsername, longPassword)))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$[*]", hasItem("Username must be between 5 and 30 characters")))
+                .andExpect(jsonPath("$[*]", hasItem("Password must be between 8 and 50 characters")));
+    }
+
+    @WithMockUser
+    @Test
+    public void refreshToken_WhenTokenValidButUserNonExisting_ShouldReturnNotFoundOrAppropriateError() throws Exception {
+        String validToken = "validTokenButNoUser";
+        RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setToken(validToken);
+        refreshToken.setUser(null);
+
+        given(refreshTokenService.findByToken(validToken)).willReturn(Optional.of(refreshToken));
+
+        mockMvc.perform(post("/api/auth/refreshToken")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"token\":\"" + validToken + "\"}"))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.title", equalTo("Associated user not found or token is invalid")));
+    }
+
+    @WithMockUser
+    @Test
+    public void authenticate_WhenMalformedJson_ShouldReturnBadRequest() throws Exception {
+        String malformedJson = "{\"username\":\"testuser\", \"password\" \"testpassword\"";
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(malformedJson))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+    }
+
+    @WithMockUser
+    @Test
+    public void refreshToken_WhenMalformedJson_ShouldReturnBadRequest() throws Exception {
+        String malformedJson = "{\"token\" \"validToken\"";
+
+        mockMvc.perform(post("/api/auth/refreshToken")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(malformedJson))
+                .andExpect(status().isBadRequest());
+    }
 }

@@ -8,7 +8,7 @@ public class PasswordGenerator {
     private final BCryptPasswordEncoder encoder;
 
     public static void main(String[] args) {
-        var password = new PasswordGenerator(new BCryptPasswordEncoder()).generatePassword("user");
+        var password = new PasswordGenerator(new BCryptPasswordEncoder()).generatePassword("password");
         System.out.println(password);
     }
 
