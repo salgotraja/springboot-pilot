@@ -144,6 +144,22 @@ class AuthenticationControllerTest {
 
     @WithMockUser
     @Test
+    public void givenInvalidCredentials_whenAuthenticate_thenShouldReturnBadCredentials() throws Exception {
+
+        // Mock the AuthenticationManager to throw a BadCredentialsException when invalid credentials are used
+        given(authenticationManager.authenticate(any(Authentication.class)))
+                .willThrow(new BadCredentialsException("Bad credentials"));
+
+
+        // Act & Assert
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"username\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @WithMockUser
+    @Test
     public void refreshToken_WhenTokenExists_ShouldReturnNewToken() throws Exception {
         String token = "validToken";
         RefreshToken refreshToken = new RefreshToken();

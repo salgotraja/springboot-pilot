@@ -119,6 +119,4 @@ public class AuthenticationControllerITest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.access_token", notNullValue()));
     }
-
-
 }
