@@ -142,8 +142,6 @@ class AuthenticationControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
-
-
     @WithMockUser
     @Test
     public void refreshToken_WhenTokenExists_ShouldReturnNewToken() throws Exception {

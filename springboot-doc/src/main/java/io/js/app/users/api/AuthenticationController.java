@@ -40,6 +40,12 @@ public class AuthenticationController {
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> createAuthenticationToken(
             @RequestBody AuthenticationRequest credentials) {
+
+        if (credentials.getUsername() == null || credentials.getUsername().isEmpty()
+                || credentials.getPassword() == null || credentials.getPassword().isEmpty()) {
+            throw new BadCredentialsException("Username and password must be provided");
+        }
+
         try {
             var authentication =
                     authenticationManager.authenticate(
@@ -68,19 +74,6 @@ public class AuthenticationController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
-
-    /*@PostMapping("/refreshToken")
-    public ResponseEntity<AuthenticationResponse> refreshToken(@RequestBody RefreshTokenRequestDto refreshTokenRequestDTO){
-        var authResponse = refreshTokenService.findByToken(refreshTokenRequestDTO.getToken())
-                .map(refreshTokenService::verifyExpiration)
-                .map(RefreshToken::getUser)
-                .map(user -> {
-                    String accessToken = tokenHelper.generateToken(user.getEmail());
-                    return getAuthenticationResponse(accessToken, refreshTokenRequestDTO.getToken());
-                }).orElseThrow(() -> new TokenNotExistException("Refresh Token is not in DB"));
-
-        return ResponseEntity.ok(authResponse);
-    }*/
 
     @PostMapping("/refreshToken")
     public ResponseEntity<AuthenticationResponse> refreshToken(@RequestBody RefreshTokenRequestDto refreshTokenRequestDTO) {

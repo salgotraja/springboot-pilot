@@ -1,4 +1,4 @@
-package io.js.app.users.api.infra;
+package io.js.app.infra;
 
 import io.js.SpringbootDocApplication;
 import org.springframework.boot.SpringApplication;

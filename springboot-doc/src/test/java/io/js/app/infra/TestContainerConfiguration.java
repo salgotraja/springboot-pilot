@@ -1,4 +1,4 @@
-package io.js.app.users.api.infra;
+package io.js.app.infra;
 
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
