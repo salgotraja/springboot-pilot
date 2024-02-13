@@ -1,6 +1,5 @@
 package io.js.app.security.refresh;
 
-import io.js.app.security.refresh.RefreshToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -3,6 +3,9 @@ package io.js.app.users.helper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @RequiredArgsConstructor
 public class PasswordGenerator {
     private final BCryptPasswordEncoder encoder;

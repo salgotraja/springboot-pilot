@@ -95,9 +95,6 @@ public class AuthenticationController {
         return ResponseEntity.ok(authResponse);
     }
 
-
-
-
     private AuthenticationResponse getAuthenticationResponse(String accessToken, String refreshToken) {
         return new AuthenticationResponse(
                 accessToken,
