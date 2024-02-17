@@ -46,8 +46,6 @@ class JsonPlaceHolderHttpClientTest {
         int userId = 11;
         client.deleteUser(userId);
 
-        assertThatThrownBy(() -> {
-            client.findUserById(userId);
-        }).isInstanceOf(HttpClientErrorException.NotFound.class);
+        assertThatThrownBy(() -> client.findUserById(userId)).isInstanceOf(HttpClientErrorException.NotFound.class);
     }
 }
